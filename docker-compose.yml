@@ -47,8 +47,12 @@ services:
   # USER SERVICE
   # ─────────────────────────────────────────
   user-service:
+
+    ports:
+    - "8081:8081"
+
     build:
-      context: ../user-service/Telematica-GruopsMessages
+      context: ../user-service/user-service
       dockerfile: Dockerfile
     container_name: user-service
     restart: unless-stopped
@@ -70,8 +74,10 @@ services:
   # MESSAGING SERVICE
   # ─────────────────────────────────────────
   messaging-service:
+    ports:
+    - "8082:8082"
     build:
-      context: ../messaging-service/Telematica-GruopsMessages
+      context: ../messaging-service/messaging-service
       dockerfile: Dockerfile
     container_name: messaging-service
     restart: unless-stopped
@@ -98,8 +104,10 @@ services:
   # FILE SERVICE
   # ─────────────────────────────────────────
   file-service:
+    ports:
+    - "8083:8083"
     build:
-      context: ../file-service/Telematica-GruopsMessages
+      context: ../file-service/file-service
       dockerfile: Dockerfile
     container_name: file-service
     restart: unless-stopped
@@ -119,6 +127,8 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+
+      
 
   # ─────────────────────────────────────────
   # NGINX LOAD BALANCER
