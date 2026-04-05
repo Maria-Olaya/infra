@@ -1,0 +1,38 @@
+apiVersion: v1
+data:
+  nginx.conf: "events {\r\n    worker_connections 1024;\r\n}\r\n\r\nhttp {\r\n    include
+    \      /etc/nginx/mime.types;\r\n    default_type  application/octet-stream;\r\n
+    \   charset utf-8;\r\n\r\n    upstream user_service {\r\n        server user-service:8081;\r\n
+    \   }\r\n\r\n    upstream messaging_service {\r\n        server messaging-service:8082;\r\n
+    \   }\r\n\r\n    upstream file_service {\r\n        server file-service:8083;\r\n
+    \   }\r\n\r\n    server {\r\n        listen 80;\r\n\r\n        # ── Frontend ──────────────────────────\r\n
+    \       location / {\r\n            root /usr/share/nginx/html;\r\n            index
+    index.html;\r\n            try_files $uri $uri/ /index.html;\r\n        }\r\n\r\n
+    \       # ── User Service ──────────────────────\r\n        location /api/auth
+    {\r\n            proxy_pass http://user_service/api/auth;\r\n            proxy_set_header
+    Host $host;\r\n            proxy_set_header X-Real-IP $remote_addr;\r\n        }\r\n\r\n
+    \       location /api/users {\r\n            proxy_pass http://user_service/api/users;\r\n
+    \           proxy_set_header Host $host;\r\n            proxy_set_header X-Real-IP
+    $remote_addr;\r\n        }\r\n\r\n        location /api/messages {\r\n            proxy_pass
+    http://messaging_service/api/messages;\r\n            proxy_set_header Host $host;\r\n
+    \           proxy_set_header X-Real-IP $remote_addr;\r\n        }\r\n\r\n        location
+    /api/groups {\r\n            proxy_pass http://messaging_service/api/groups;\r\n
+    \           proxy_set_header Host $host;\r\n            proxy_set_header X-Real-IP
+    $remote_addr;\r\n        }\r\n\r\n        location /api/dm {\r\n            proxy_pass
+    http://messaging_service/api/dm;\r\n            proxy_set_header Host $host;\r\n
+    \           proxy_set_header X-Real-IP $remote_addr;\r\n        }\r\n\r\n        location
+    /api/presence {\r\n            proxy_pass http://messaging_service/api/presence;\r\n
+    \           proxy_set_header Host $host;\r\n            proxy_set_header X-Real-IP
+    $remote_addr;\r\n        }\r\n\r\n        location /api/files {\r\n            proxy_pass
+    http://file_service/api/files;\r\n            proxy_set_header Host $host;\r\n
+    \           proxy_set_header X-Real-IP $remote_addr;\r\n            client_max_body_size
+    10M;\r\n        }\r\n\r\n        # ── WebSocket ─────────────────────────\r\n
+    \       location /ws {\r\n            proxy_pass http://messaging_service;\r\n
+    \           proxy_http_version 1.1;\r\n            proxy_set_header Upgrade $http_upgrade;\r\n
+    \           proxy_set_header Connection \"upgrade\";\r\n            proxy_set_header
+    Host $host;\r\n            proxy_read_timeout 86400;\r\n        }\r\n\r\n        \r\n
+    \   }\r\n}"
+kind: ConfigMap
+metadata:
+  name: frontend-nginx-config
+  namespace: groupchat

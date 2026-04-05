@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-replica-2
+  namespace: groupchat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-replica-2
+  template:
+    metadata:
+      labels:
+        app: postgres-replica-2
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: postgres-replica-2
+          image: bitnami/postgresql:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRESQL_REPLICATION_MODE
+              value: slave
+            - name: POSTGRESQL_MASTER_HOST
+              value: postgres-primary
+            - name: POSTGRESQL_MASTER_PORT_NUMBER
+              value: "5432"
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_USER
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRESQL_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_DB
+            - name: POSTGRESQL_REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: REPLICATION_USER
+            - name: POSTGRESQL_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: REPLICATION_PASSWORD
+          volumeMounts:
+            - name: postgres-replica-2-data
+              mountPath: /bitnami/postgresql
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d groupchatdb
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d groupchatdb
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      volumes:
+        - name: postgres-replica-2-data
+          persistentVolumeClaim:
+            claimName: postgres-replica-2-pvc
