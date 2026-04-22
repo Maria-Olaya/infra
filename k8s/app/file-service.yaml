@@ -15,13 +15,13 @@ spec:
     spec:
       containers:
         - name: file-service
-          image: iacostap23/file-service:latest
+          image: sofia1023/file-service:v2
           imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:
             - name: DB_URL
-              value: jdbc:postgresql://postgres-primary:5432/groupchatdb
+              value: jdbc:postgresql://postgres-file:5432/filedb
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

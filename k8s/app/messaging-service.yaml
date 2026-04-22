@@ -15,13 +15,13 @@ spec:
     spec:
       containers:
         - name: messaging-service
-          image: iacostap23/messaging-service:latest
+          image: sofia1023/messaging-service:v2
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:
             - name: DB_URL
-              value: jdbc:postgresql://postgres-primary:5432/groupchatdb
+              value: jdbc:postgresql://postgres-messaging:5432/messagingdb
             - name: DB_USER
               valueFrom:
                 secretKeyRef:

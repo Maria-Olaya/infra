@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-file
+  namespace: groupchat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-file
+  template:
+    metadata:
+      labels:
+        app: postgres-file
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: postgres-file
+          image: bitnami/postgresql:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_USER
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRESQL_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-cluster-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRESQL_DATABASE
+              value: filedb
+          volumeMounts:
+            - name: postgres-file-data
+              mountPath: /bitnami/postgresql
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d filedb
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d filedb
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      volumes:
+        - name: postgres-file-data
+          persistentVolumeClaim:
+            claimName: postgres-file-pvc
